@@ -1,6 +1,0 @@
-openai
-numpy
-faiss-cpu
-python-docx
-docxtpl
-googletrans==4.0.0rc1
