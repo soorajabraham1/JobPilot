@@ -17,7 +17,7 @@ from datetime import datetime
 
 translator = Translator()
 month_name = datetime.now().strftime("%B")
-
+parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 myOptions= options(r"textfiles\choices.txt")
 
 def parse_job_description():
@@ -101,11 +101,11 @@ def generate_letter():
     if application_type== 'Initiative application':
         para=myOptions['Initiative application'][0]
         
-        folder_path = fr"E:\{month_name}\Initiative\{company_name}\{job_role_filtered}"
+        folder_path = fr"{parent_folder}\{month_name}\Initiative\{company_name}\{job_role_filtered}"
 
     else:
         para=myOptions['Application'][0]
-        folder_path = fr"E:\{month_name}\{company_name}\{job_role_filtered}"
+        folder_path = fr"{parent_folder}\{month_name}\{company_name}\{job_role_filtered}"
     if 'Embedded' in first_point and company_language=='German':
         embedded_devices=myOptions['embedded_devices_german'][0]
     elif 'Embedded' in first_point and company_language=='English':
@@ -143,11 +143,9 @@ def generate_letter():
                    'summary_sentence_german': summary_sentence})
     
     savefile(doc, folder_path, "/Cover_letter.docx")
-    
-    savefile(cv_doc, folder_path, "/CV.docx" )
-    folder_path = Path(folder_path)  # Convert to Path object
-    parent_folder = folder_path.parent.parent
-    savefile(doc1, fr"{parent_folder}","\emailtemplate.docx")
+    savefile(cv_doc, folder_path, "/CV.docx" ) # Convert to Path object
+    savefile(doc1, fr"{parent_folder}\emailtemplate.docx")
+
     
 # Create tkinter window
 window = tk.Tk()

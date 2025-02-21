@@ -1,2 +1,2 @@
 {"api_key":"APIKey here",
-"name":your name change it is config.txt}
+"name":"your name change it is config.txt"}
