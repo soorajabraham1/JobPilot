@@ -51,14 +51,14 @@ def process_job_description(job_description_entry):
 
     # Example prompt to extract information from a webpage or text
     prompt = """
-    Extract the following details from the webpage/document:
-    - Company name:
-    - Company city:
-    - Company country:
-    - Job role:
-    - Recruiter name (if not mentioned, set it as "Recruiter"):
-    - Requirements for the job:
-    - The job post language:
+    Extract the following details from the webpage/document as a dictionary. The keys should not change:
+    - "Company name"
+    - "Company city"
+    - "Company country"
+    - "Job role"
+    - "Recruiter name" (if not mentioned, set it as "Recruiter"):
+    - "Qualifications for the job"
+    - "Job post language"
     """
 
     input_text = job_description  # Use the job description pasted by the user
@@ -70,9 +70,8 @@ def process_job_description(job_description_entry):
 
     # Extract the generated content from the response
     extracted_info = response.choices[0].message.content
-    # Parse the extracted info
-    lines = extracted_info.splitlines()
-    return lines
+    
+    return extracted_info
 
 def myWindow():
 

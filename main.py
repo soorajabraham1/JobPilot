@@ -6,6 +6,7 @@ import docxtpl
 from datetime import datetime
 from googletrans import Translator
 import os
+import json
 from pathlib import Path
 from code.widget import options 
 from code.widget import myopenai
@@ -21,31 +22,18 @@ parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 myOptions= options(r"textfiles\choices.txt")
 
 def parse_job_description():
-    lines= process_job_description(job_description_entry)
+    result = json.loads(process_job_description(job_description_entry))
+    print(result)
     
-    company_name = ""
-    company_location = ""
-    company_country = ""
-    job_role = ""
-    recruiter_name = ""
-    qualifications = ""
-    job_language = ""
-
-    for line in lines:
-        if "Company name:" in line:
-            company_name = line.split(":")[1].strip()
-        elif "Company city:" in line:
-            company_location = line.split(":")[1].strip()
-        elif "Company country:" in line:
-            company_country = line.split(":")[1].strip()
-        elif "Job role:" in line:
-            job_role = line.split(":")[1].strip()
-        elif "Recruiter name:" in line:
-            recruiter_name = line.split(":")[1].strip()
-        elif "Requirements for the job:" in line:
-            qualifications = line.split(":")[1].strip()
-        elif "The job post language:" in line:
-            job_language = line.split(":")[1].strip()
+    company_name = result.get("Company name")
+    company_location = result.get("Company city")
+    company_country =result.get("Company country")
+    job_role = result.get("Job role")
+    recruiter_name = result.get("Recruiter name")
+    qualifications = result.get("Qualifications for the job")
+    job_language = result.get("Job post language")
+    print(qualifications)
+    
     # Display extracted info in the entry fields
     company_name_entry.delete(0, tk.END)
     company_name_entry.insert(0, company_name)
@@ -144,12 +132,13 @@ def generate_letter():
     
     savefile(doc, folder_path, "/Cover_letter.docx")
     savefile(cv_doc, folder_path, "/CV.docx" ) # Convert to Path object
-    savefile(doc1, fr"{parent_folder}\emailtemplate.docx")
+    savefile(doc1, parent_folder,"/emailtemplate.docx")
+
 
     
 # Create tkinter window
 window = tk.Tk()
-window.title("Job Description Parser and Word Generator")
+window.title("JobPilot")
 
 # Create and place widgets
 frame = tk.Frame(window, padx=20, pady=20)

@@ -64,7 +64,6 @@ def generate(path, job_role, query,job_language):
     Personalized Summary  (45-50 words):
     """
 
-    print("retrieved_chunk",retrieved_chunk)
     response = client.chat.completions.create(
     model="gpt-3.5-turbo-16k",
     messages=[ {"role": "user", "content": prompt}])
