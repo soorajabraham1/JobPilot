@@ -1,14 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-from openai import OpenAI
+from code.chatgpt import get_response_for_prompt
 import os
-import json
 
-with open(r"textfiles\config.txt", "r") as file:
-    data = json.loads(file.read())
-
-api_key = data["api_key"]
-client = OpenAI(api_key=api_key)
 
 def savefile(doc, folder_path, filename ):
     if not os.path.exists(folder_path):
@@ -16,12 +10,7 @@ def savefile(doc, folder_path, filename ):
     folder_path_letter = folder_path + filename
     doc.save(folder_path_letter)
 
-def myopenai(query):
-    completion = client.chat.completions.create(
-    model="gpt-3.5-turbo-16k",
-    messages=[{"role": "user", "content": query}]
-    )
-    return completion.choices[0].message.content
+
 
 def remove_signs(text):
     
@@ -62,16 +51,8 @@ def process_job_description(job_description_entry):
     """
 
     input_text = job_description  # Use the job description pasted by the user
-
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-16k",
-        messages=[{"role": "user", "content": prompt + input_text}]
-    )
-
-    # Extract the generated content from the response
-    extracted_info = response.choices[0].message.content
     
-    return extracted_info
+    return get_response_for_prompt(prompt + input_text)
 
 def myWindow():
 

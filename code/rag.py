@@ -1,18 +1,11 @@
-from openai import OpenAI
 import numpy as np
 import faiss
-import json
+from code.chatgpt import get_response_for_prompt, get_text_embedding
 
 
-with open(r"textfiles\config.txt", "r") as file:
-    data = json.loads(file.read())
-
-api_key = data["api_key"]
-
-client = OpenAI(api_key=api_key)
 
 def generate(path, job_role, query,job_language):
-    file_path = r'textfiles\rag\resume.txt'
+    file_path = r'../textfiles\rag\resume.txt'
     # Open the file in read mode
     with open(file_path, 'r') as file:
         # Read the contents of the file
@@ -23,14 +16,6 @@ def generate(path, job_role, query,job_language):
     # Split document into chunks
     chunk_size = 100
     chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-
-    # Create embeddings for each text chunk
-    def get_text_embedding(input):
-        response = client.embeddings.create(
-        input= input,
-        model="text-embedding-3-small"
-    )
-        return response.data[0].embedding
 
 
     text_embeddings = np.array([get_text_embedding(chunk) for chunk in chunks])
@@ -64,9 +49,5 @@ def generate(path, job_role, query,job_language):
     Personalized Summary  (45-50 words):
     """
 
-    response = client.chat.completions.create(
-    model="gpt-3.5-turbo-16k",
-    messages=[ {"role": "user", "content": prompt}])
-
-    return response.choices[0].message.content
+    return get_response_for_prompt(prompt)
 

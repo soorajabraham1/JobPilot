@@ -1,15 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
-from openai import OpenAI
-from docx import Document
 import docxtpl
-from datetime import datetime
 from googletrans import Translator
 import os
 import json
-from pathlib import Path
 from code.widget import options 
-from code.widget import myopenai
+from code.chatgpt import myopenai
 from code.widget import remove_signs
 from code.widget import process_job_description
 from code.widget import savefile
@@ -54,8 +50,6 @@ def parse_job_description():
 
 
 def generate_letter():
-
-
     company_language= job_language_entry.get()
     company_name= company_name_entry.get()
     company_location= company_location_entry.get()
@@ -67,14 +61,12 @@ def generate_letter():
     first_point=first_point_entry.get()
     job_first_para=job_first_para_entry.get("1.0", tk.END)
     company_name_short=company_name_entry.get()
-    #abt_cmpny=abt_cmpny_entry.get()
     job_disc_cv = job_qualifications_entry.get("1.0", tk.END)
     job_language=job_language_entry.get()
     job_role_filtered = remove_signs(job_role)
     first_para="write a 3 sentence starting parahgraph for my coverletter showing enthusiasm in the role"+ job_role+ "at "+ company_name+ ". write in" + company_language + "language. Add things related to company to show more enthusiasm. Don't add salutation. Write in exactly 7 words. I am adding some information about the specific department in the company: "
     first_para_sentence = myopenai(first_para)
 
-    #summary_sentence = myopenai(summary_eng)
     summary_sentence = generate("path", job_first_para, job_disc_cv, job_language)
     
     if company_language=='German':
@@ -135,7 +127,48 @@ def generate_letter():
     savefile(doc1, parent_folder,"/emailtemplate.docx")
 
 
-    
+def open_settings():
+    global settings_window
+    settings_window = tk.Toplevel(window)  # Create a new top-level window
+    settings_window.title("Settings")
+    settings_window.geometry("300x200")
+
+    def save_api_key():
+        api_key = api_key_entry.get().strip()
+        name = name_entry.get().strip()
+
+        try:
+            with open("textfiles/config.txt", "r") as file:
+                data = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            data = {}
+
+        if api_key:
+            data["api_kuttan"] = api_key
+        if name:
+            data["name"] = name
+
+        with open("textfiles/config.txt", "w") as file:
+            json.dump(data, file)
+
+    api_key_label = tk.Label(settings_window, text="Enter API Key:")
+    api_key_label.pack(pady=5)
+
+    api_key_entry = tk.Entry(settings_window, width=30)
+    api_key_entry.pack(pady=5)
+
+    name_label = tk.Label(settings_window, text="Enter Name:")
+    name_label.pack(pady=5)
+
+    name_entry = tk.Entry(settings_window, width=30)
+    name_entry.pack(pady=5)
+
+    save_button = tk.Button(settings_window, text="Save", command=save_api_key)
+    save_button.pack(pady=5)
+
+    back_button = tk.Button(settings_window, text="Back", command=settings_window.destroy)
+    back_button.pack(pady=20)
+
 # Create tkinter window
 window = tk.Tk()
 window.title("JobPilot")
@@ -143,6 +176,8 @@ window.title("JobPilot")
 # Create and place widgets
 frame = tk.Frame(window, padx=20, pady=20)
 frame.pack()
+settings_button = tk.Button(frame, text="Settings", command=open_settings)
+settings_button.grid(row=13, columnspan=2, pady=10)
 
 job_description_label = tk.Label(frame, text="Job Description:")
 job_description_label.grid(row=0, column=0, sticky="w", pady=5)

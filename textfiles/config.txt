@@ -1,2 +1,19 @@
-{"api_key":"APIKey here",
-"name":"your name change it is config.txt"}
+{"api_key": "rrrrrrrrrrrrrrrrrr",
+ "name": "sdfs"
+"company_language":[German,English],
+"application_type":["Initiative application","Application"],
+
+"first_point":["Deep Learning","Machine Learning","Artificial Intelligence",
+		"Embedded Software Development","Embedded Software Development and Machine Learning",
+		"Software Development and Computer Vision"],
+
+"medium":["Portal","Email"],
+
+"Application":["Upon going through the requirements for this role, I am pleased to note that they 
+		closely match my qualifications and expertise. This leads me to believe that I could be a valuable candidate for this position."],
+
+"Initiative application":["Though I am aware that there might not be any current job postings for this role, 
+I am reaching out to convey my enthusiasm and to showcase how my skills and experiences align with your mission and vision."],
+
+"Recruiter":["Recruiter"]
+}
