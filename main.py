@@ -139,7 +139,7 @@ def generate_letter():
         email_doc.render({ 'company_name' : company_name,
                     'date':today_date,
                     'application_type': application_type,
-                    'job_role':job_role,
+                    'job_role':job_role.replace('\n', ''),
                     #'application_medium': application_medium,
                     'recruiter_name':recruiter_name,
                     'para': para
