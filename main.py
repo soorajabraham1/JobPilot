@@ -225,7 +225,7 @@ first_point_entry.grid(row=9, column=1)
 job_language_label = tk.Label(frame, text="Job Post Language:")
 job_language_label.grid(row=10, column=0, sticky="w", pady=5)
 language_choices= myOptions['company_language']
-job_language_entry = ttk.Combobox(frame, values=choices)
+job_language_entry = ttk.Combobox(frame, values=language_choices)
 job_language_entry.grid(row=10, column=1, padx=10, pady=5)
 
 parse_button = tk.Button(frame, text="Parse", command=parse_job_description)
