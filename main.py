@@ -1,29 +1,45 @@
 import tkinter as tk
 from tkinter import ttk
-from openai import OpenAI
-from docx import Document
 import docxtpl
-from datetime import datetime
 from googletrans import Translator
 import os
 import json
-from pathlib import Path
-from code.widget import options 
-from code.widget import myopenai
-from code.widget import remove_signs
-from code.widget import process_job_description
-from code.widget import savefile
-from code.rag import generate
+from openai import OpenAI
+from scripts.widget import options, load_from_txt
+from scripts.widget import myopenai
+from scripts.widget import remove_signs
+from scripts.widget import process_job_description
+from scripts.widget import savefile
+from scripts.rag import generate_cv_summary
 from datetime import datetime
+import sys
+config_path=r"textfiles\config.txt"
+resume_summary_path = r'textfiles\resume.txt'
+german_cover_letter=r"mydocs\Cover_letter_template_germanopenai.docx"
+english_cover_letter=r"mydocs\Cover_letter_template.docx"
+german_cv=r"mydocs\CV_German.docx"
+english_cv=r"mydocs\CV_English.docx"
+email_template=r"mydocs\emailtemplate.docx"
+myOptions= options(r"textfiles\choices.txt")
+config=json.loads(load_from_txt(config_path))
+client = OpenAI(api_key=config["api_key"])
+
+def get_output_folder():
+    """Get the folder where the EXE or PY file is located."""
+    if getattr(sys, 'frozen', False):
+        # If running as a bundled exe
+        return os.path.dirname(sys.executable)
+    else:
+        # If running as a normal .py script
+        return os.path.dirname(os.path.abspath(__file__))
 
 translator = Translator()
 month_name = datetime.now().strftime("%B")
-parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-myOptions= options(r"textfiles\choices.txt")
+parent_folder = get_output_folder()
+
 
 def parse_job_description():
-    result = json.loads(process_job_description(job_description_entry))
-    print(result)
+    result = json.loads(process_job_description(client,job_description_entry))
     
     company_name = result.get("Company name")
     company_location = result.get("Company city")
@@ -32,8 +48,7 @@ def parse_job_description():
     recruiter_name = result.get("Recruiter name")
     qualifications = result.get("Qualifications for the job")
     job_language = result.get("Job post language")
-    print(qualifications)
-    
+
     # Display extracted info in the entry fields
     company_name_entry.delete(0, tk.END)
     company_name_entry.insert(0, company_name)
@@ -54,8 +69,6 @@ def parse_job_description():
 
 
 def generate_letter():
-
-
     company_language= job_language_entry.get()
     company_name= company_name_entry.get()
     company_location= company_location_entry.get()
@@ -71,20 +84,21 @@ def generate_letter():
     job_disc_cv = job_qualifications_entry.get("1.0", tk.END)
     job_language=job_language_entry.get()
     job_role_filtered = remove_signs(job_role)
-    first_para="write a 3 sentence starting parahgraph for my coverletter showing enthusiasm in the role"+ job_role+ "at "+ company_name+ ". write in" + company_language + "language. Add things related to company to show more enthusiasm. Don't add salutation. Write in exactly 7 words. I am adding some information about the specific department in the company: "
-    first_para_sentence = myopenai(first_para)
-
-    #summary_sentence = myopenai(summary_eng)
-    summary_sentence = generate("path", job_first_para, job_disc_cv, job_language)
+    first_para=("write a 3 sentence starting paragraph for my cover letter showing enthusiasm in the role"+ job_role+
+                "at "+ company_name+ ". write in" + company_language + "language. Add things related to company to show"
+                " more enthusiasm. Don't add salutation. Write in exactly 7 words. I am adding some information about"
+                                                                       " the specific department in the company: ")
+    first_para_sentence = myopenai(client,first_para)
+    summary_sentence = generate_cv_summary(client,resume_summary_path, job_first_para, job_disc_cv, job_language)
     
     if company_language=='German':
-        doc = docxtpl.DocxTemplate(r"mydocs\Cover_letter_template_germanopenai.docx")
-        cv_doc = docxtpl.DocxTemplate(r"mydocs\CV_German.docx")
+        cover_letter_doc = docxtpl.DocxTemplate(german_cover_letter) if config["coverletter"] else None
+        cv_doc = docxtpl.DocxTemplate(german_cv) if config["resume"] else None
     elif company_language=='English':
-        doc = docxtpl.DocxTemplate(r"mydocs\Cover_letter_templateopenai.docx")
-        cv_doc = docxtpl.DocxTemplate(r"mydocs\CV_English.docx")
+        cover_letter_doc = docxtpl.DocxTemplate(english_cover_letter) if config["coverletter"] else None
+        cv_doc = docxtpl.DocxTemplate(english_cv) if config["resume"] else None
         
-    doc1 = docxtpl.DocxTemplate(r"mydocs\emailtemplate.docx")
+    email_doc = docxtpl.DocxTemplate(email_template) if config["email"] else None
     
     if application_type== 'Initiative application':
         para=myOptions['Initiative application'][0]
@@ -106,43 +120,50 @@ def generate_letter():
     
     
 
-    doc.render({ 'company_name' : company_name,
+    if cover_letter_doc:
+        print("cover_letter created")
+        cover_letter_doc.render({ 'company_name' : company_name,
                 'company_location':company_location,
                 'country':country,
                 'date':today_date,
                 'application_type': application_type,
-                'job_role':job_role,
+                'job_role':job_role.replace('\n', ''),
                 'recruiter_name':recruiter_name,
                 'first_point' :first_point,
                 'embedded_devices' : embedded_devices,
                 'first_para_sentence' : first_para_sentence,
                 'job_first_para' : job_first_para,
                 'company_name_short': company_name_short})
+    if email_doc:
+        print("email created")
+        email_doc.render({ 'company_name' : company_name,
+                    'date':today_date,
+                    'application_type': application_type,
+                    'job_role':job_role,
+                    #'application_medium': application_medium,
+                    'recruiter_name':recruiter_name,
+                    'para': para
+                    })
+    if cv_doc:
+        print("resume created")
+        cv_doc.render({'summary_sentence_english': summary_sentence,
+                    'summary_sentence_german': summary_sentence})
     
-    doc1.render({ 'company_name' : company_name,
-                'date':today_date,
-                'application_type': application_type,
-                'job_role':job_role,
-                #'application_medium': application_medium,
-                'recruiter_name':recruiter_name,
-                'para': para
-                })
-    cv_doc.render({'summary_sentence_english': summary_sentence,
-                   'summary_sentence_german': summary_sentence})
-    
-    savefile(doc, folder_path, "/Cover_letter.docx")
-    savefile(cv_doc, folder_path, "/CV.docx" ) # Convert to Path object
-    savefile(doc1, parent_folder,"/emailtemplate.docx")
+    savefile(cover_letter_doc, folder_path, "/Cover_letter.docx") if config["coverletter"] else None
+    savefile(cv_doc, folder_path, "/CV.docx" ) if config["resume"] else None
+    savefile(email_doc, parent_folder,"/email.docx")if config["email"] else None
 
 
     
 # Create tkinter window
 window = tk.Tk()
-window.title("JobPilot")
+window.title("Jobpilot")
 
 # Create and place widgets
 frame = tk.Frame(window, padx=20, pady=20)
 frame.pack()
+
+
 
 job_description_label = tk.Label(frame, text="Job Description:")
 job_description_label.grid(row=0, column=0, sticky="w", pady=5)
@@ -214,7 +235,31 @@ generate_button = tk.Button(frame, text="Generate Word", command=generate_letter
 generate_button.grid(row=11, column=1, pady=10)
 
 status_label = tk.Label(frame, text="")
-status_label.grid(row=12, columnspan=2, pady=10)
+status_label.grid(row=13, columnspan=2, pady=10)
 
-# Start the tkinter main loop
+# Things to create label and buttons
+things_to_create_label = tk.Label(frame, text="Things to create:")
+things_to_create_label.grid(row=12, column=0, sticky="w", pady=5)
+
+# Functions to sync changes back to config
+def update_config_from_ui():
+    config['resume'] = cover_letter_var.get()
+    config['coverletter'] = cv_var.get()
+    config['email'] = email_var.get()
+    print("Updated config:", config)
+
+# Variables for checkbuttons (initialized from config)
+cover_letter_var = tk.BooleanVar(value=config['coverletter'])
+cv_var = tk.BooleanVar(value=config['resume'])
+email_var = tk.BooleanVar(value=config['email'])
+
+# Checkbuttons in a row
+cover_letter_cb = tk.Checkbutton(frame, text="Cover Letter", variable=cover_letter_var,command=update_config_from_ui)
+cover_letter_cb.grid(row=12, column=0, sticky="w", padx=5, pady=5)
+
+cv_cb = tk.Checkbutton(frame, text="CV", variable=cv_var,command=update_config_from_ui)
+cv_cb.grid(row=12, column=1, sticky="w", padx=5, pady=5)
+
+email_cb = tk.Checkbutton(frame, text="Email", variable=email_var,command=update_config_from_ui)
+email_cb.grid(row=12, column=2, sticky="w", padx=5, pady=5)
 window.mainloop()

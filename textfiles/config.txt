@@ -1,2 +1,4 @@
-{"api_key":"APIKey here",
-"name":"your name change it is config.txt"}
+{"api_key":"put key here",
+"resume":true,
+"coverletter": false,
+"email":true}
